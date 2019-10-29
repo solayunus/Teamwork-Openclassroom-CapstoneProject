@@ -2,6 +2,7 @@
 This is a capstone project for DevC program by facebook supported by Andela
 
 #Challenge One Summary
+
 You are expected to create a set of API endpoints listed under the API Endpoints Specification
 section and ensure you persist your data using a PostgreSQL database.
 You are to write SQL queries that will help you write to and read from your database. The
