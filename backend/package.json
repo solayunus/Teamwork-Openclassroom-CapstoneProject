@@ -1,0 +1,29 @@
+{
+    "name": "Teamwork-Openclassroom-CapstoneProject",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "jasmine"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/solayunus/Teamwork-Openclassroom-CapstoneProject.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/solayunus/Teamwork-Openclassroom-CapstoneProject/issues"
+    },
+    "homepage": "https://github.com/solayunus/Teamwork-Openclassroom-CapstoneProject#readme",
+    "devDependencies": {
+        "eslint": "^6.6.0",
+        "eslint-config-airbnb-base": "^14.0.0",
+        "eslint-plugin-import": "^2.18.2",
+        "jasmine": "^3.5.0"
+    },
+    "dependencies": {
+        "express": "^4.17.1"
+    }
+}
