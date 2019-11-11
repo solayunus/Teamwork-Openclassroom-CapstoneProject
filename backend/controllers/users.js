@@ -1,6 +1,4 @@
 const Pool = require('pg').Pool;
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const helper = require('./helper');
 const pool = new Pool({
     user: 'postgres',
@@ -9,14 +7,6 @@ const pool = new Pool({
     password: 'pass1245',
     port: 5432,
 });
-
-
-
-
-
-
-
-
 
 const getUsers = (request, response) => {
     const queryString = 'SELECT * FROM users ORDER BY id ASC';
