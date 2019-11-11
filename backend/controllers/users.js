@@ -1,4 +1,7 @@
 const Pool = require('pg').Pool;
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const helper = require('./helper');
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
@@ -7,38 +10,104 @@ const pool = new Pool({
     port: 5432,
 });
 
-const getUsers = (request, response) => {
-    pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
+const generateToken = (id) => {
+    const token = jwt.sign({
+            userId: id
+        },
+        'RANDOM_TOKEN_SECRET', { expiresIn: '24h' }
+    );
+    return token;
+}
+
+const checkPassword = (reqPassword, foundUser) => {
+    return new Promise((resolve, reject) => bcrypt.compare(reqPassword, foundUser, (error, response) => {
         if (error) {
-            throw error;
+            reject(error);
+        } else if (response) {
+            resolve(response);
+        } else {
+            reject(new Error('Password do not match'))
+        }
+    }))
+}
+
+
+
+
+
+const getUsers = (request, response) => {
+    const queryString = 'SELECT * FROM users ORDER BY id ASC';
+    pool.query(queryString, (error, results) => {
+        if (error) {
+            // throw error;
         }
         response.status(200).json(results.rows);
     })
 };
+const signin = (request, response) => {
+    const { email, upassword } = request.body;
+
+    const queryString = 'SELECT * FROM users WHERE email = $1';
+
+    pool.query(queryString, [email], (error, results) => {
+        if (error) {
+            // throw error;
+            return response.status(500).json({
+                message: "email not found",
+                error: error
+            })
+        }
+        const data = results.rows[0];
+        if (!data) {
+            return response.status(500).json({
+                message: "email not found",
+                error: error
+            })
+        }
+        checkPassword(upassword, data.upassword)
+            .then((error, feedback) => {
+                if (error) {
+                    console.log(error);
+                }
+                const token = generateToken(data.id)
+                response.status(200).json({
+                    status: "Success",
+                    token: token,
+                    userId: data.id
+                });
+            }).catch((error) => {
+                response.status(500).json({
+                    error: error
+                })
+            })
+    })
+};
 
 const getUserById = (request, response) => {
-    const id = parseInt(request.params.id)
+    const id = parseInt(request.params.id);
 
     pool.query('SELECT * FROM users WHERE id = $1', [id], (error, results) => {
         if (error) {
-            throw error;
+            //     throw error;
         }
-        response.status(200).json(results.rows)
+        response.status(200).json({ results: 'Success!!' });
     })
 };
 
 const createUser = (request, response) => {
-    const { firstname, lastname, email, upassword, gender, jobrole, department, address } = request.body;
-
-    pool.query('INSERT INTO users (firstname, lastname, email, upassword, gender, jobrole, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [firstname, lastname, email, upassword, gender, jobrole, department, address], (error, results) => {
+    const { firstname, lastname, email, gender, jobrole, department, address } = request.body;
+    const upassword = helper.hashPassword(request.body.upassword);
+    const queryString = 'INSERT INTO users (firstname, lastname, email, upassword, gender, jobrole, department, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)';
+    pool.query(queryString, [firstname, lastname, email, upassword, gender, jobrole, department, address], (error, results) => {
         if (error) {
-            console.log(error);
-            // throw error;
+            return response.status(400).json({
+                    message: 'fill in all field'
+                })
+                // throw error;
         }
         response.status(201).send(`User added with ID: ${results.insertId}`)
     })
 }
-
 const updateUser = (request, response) => {
     const id = parseInt(request.params.id);
     const { name, email } = request.body;
@@ -54,6 +123,9 @@ const updateUser = (request, response) => {
     )
 };
 
+
+
+
 const deleteUser = (request, response) => {
     const id = parseInt(request.params.id);
 
@@ -61,7 +133,8 @@ const deleteUser = (request, response) => {
         if (error) {
             throw error
         }
-        response.status(200).send(`User deleted with ID: ${id}`)
+        // response.status(200).send(`User deleted with ID: ${id}`)
+        response.status(200).json({ message: "success" });
     })
 }
 
@@ -69,6 +142,7 @@ module.exports = {
     getUsers,
     getUserById,
     createUser,
+    signin,
     updateUser,
     deleteUser,
 }

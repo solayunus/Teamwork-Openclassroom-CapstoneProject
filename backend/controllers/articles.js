@@ -11,8 +11,8 @@ const pool = new Pool({
 //post article
 const createArticle = (request, response) => {
     const { title, article } = request.body
-
-    pool.query('INSERT INTO articles (title, article) VALUES ($1, $2)', [title, article], (error, results) => {
+    const queryString = 'INSERT INTO articles (title, article) VALUES ($1, $2)';
+    pool.query(queryString, [title, article], (error, results) => {
         if (error) {
             throw error;
         }
@@ -45,7 +45,28 @@ const deleteArticle = (request, response) => {
         response.status(200).send(`User deleted with ID: ${id}`)
     })
 };
-//commen article
+
+//comment article
+const createArticleComment = (request, response) => {
+    const { comment } = request.body;
+    const article_id = parseInt(request.params.id);
+    pool.query('INSERT INTO comments (comment, article_id) VALUES ($1, $2)', [comment, article_id], (error, results) => {
+        if (error) {
+            console.log(error);
+        }
+        response.status(201).send(`User added with ID: ${results.insertId}`)
+    })
+};
+//get all comments on article
+const getComments = (request, response) => {
+    const article_id = parseInt(request.params.id);
+    pool.query('SELECT * FROM comments WHERE article_id=$1', [article_id], (error, results) => {
+        if (error) {
+            throw error;
+        }
+        response.status(200).json(results.rows);
+    })
+};
 
 //get article
 const getArticles = (request, response) => {
@@ -56,10 +77,25 @@ const getArticles = (request, response) => {
         response.status(200).json(results.rows);
     })
 };
+//get one article
+const getOneArticle = (request, response) => {
+    const id = parseInt(request.params.id)
+
+    pool.query('SELECT * FROM articles WHERE id = $1', [id], (error, results) => {
+        if (error) {
+            throw error;
+        }
+        response.status(200).json(results.rows)
+    })
+};
+
 
 module.exports = {
     getArticles,
+    getOneArticle,
     createArticle,
     updateArticle,
-    deleteArticle
+    deleteArticle,
+    createArticleComment,
+    getComments
 };
