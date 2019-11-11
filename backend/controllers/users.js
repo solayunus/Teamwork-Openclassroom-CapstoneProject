@@ -10,26 +10,9 @@ const pool = new Pool({
     port: 5432,
 });
 
-const generateToken = (id) => {
-    const token = jwt.sign({
-            userId: id
-        },
-        'RANDOM_TOKEN_SECRET', { expiresIn: '24h' }
-    );
-    return token;
-}
 
-const checkPassword = (reqPassword, foundUser) => {
-    return new Promise((resolve, reject) => bcrypt.compare(reqPassword, foundUser, (error, response) => {
-        if (error) {
-            reject(error);
-        } else if (response) {
-            resolve(response);
-        } else {
-            reject(new Error('Password do not match'))
-        }
-    }))
-}
+
+
 
 
 
@@ -64,12 +47,12 @@ const signin = (request, response) => {
                 error: error
             })
         }
-        checkPassword(upassword, data.upassword)
+        helper.checkPassword(upassword, data.upassword)
             .then((error, feedback) => {
                 if (error) {
                     console.log(error);
                 }
-                const token = generateToken(data.id)
+                const token = helper.generateToken(data.id)
                 response.status(200).json({
                     status: "Success",
                     token: token,
@@ -111,9 +94,8 @@ const createUser = (request, response) => {
 const updateUser = (request, response) => {
     const id = parseInt(request.params.id);
     const { name, email } = request.body;
-
-    pool.query(
-        'UPDATE users SET name = $1, email = $2 WHERE id = $3', [name, email, id],
+    const queryString = 'UPDATE users SET name = $1, email = $2 WHERE id = $3';
+    pool.query(queryString, [name, email, id],
         (error, results) => {
             if (error) {
                 throw error;
